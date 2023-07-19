@@ -16,7 +16,7 @@ jobs:
     - name: Prepare Build
       run: nuget restore -OutputDirectory .\Packages EasyHook.sln
     - name: Build x86
-      run: msbuild -m EasyHook.sln /p:Configuration=netfx4-Debug /p:Platform=x86 /p:TargetFrameworkVersion=v4.8 /p:TargetFrameworkProfile=""
+      run: msbuild -m EasyHook.sln /p:Configuration=netfx4-Debug /p:Platform=Win32 /p:TargetFrameworkVersion=v4.8 /p:TargetFrameworkProfile=""
     - name: Build x64
       run: msbuild -m EasyHook.sln /p:Configuration=netfx4-Debug /p:Platform=x64 /p:TargetFrameworkVersion=v4.8 /p:TargetFrameworkProfile=""
     - name: Upload x86 Artifacts
