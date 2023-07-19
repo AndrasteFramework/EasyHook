@@ -1237,6 +1237,7 @@ Returns:
 		THROW(STATUS_NO_MEMORY, L"Unable to allocate memory in current process.");
 
 	// Ensure that if we have injected into a suspended process that we can retrieve the remote function addresses
+	Sleep(1000);
 	FORCE(NtForceLdrInitializeThunk(hProc));
 
 	// The first GetRemoteModuleHandle call in GetRemoteFuncAddress can return NULL in some applications started in a suspended. Call GetRemoteFuncAddress once to prevent an access violation error.
