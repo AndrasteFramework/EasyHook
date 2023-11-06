@@ -1237,11 +1237,13 @@ Returns:
 		THROW(STATUS_NO_MEMORY, L"Unable to allocate memory in current process.");
 
 	// Ensure that if we have injected into a suspended process that we can retrieve the remote function addresses
-	Sleep(1000);
 	FORCE(NtForceLdrInitializeThunk(hProc));
 
-	// The first GetRemoteModuleHandle call in GetRemoteFuncAddress can return NULL in some applications started in a suspended. Call GetRemoteFuncAddress once to prevent an access violation error.
-	GetRemoteFuncAddress(InTargetPID, hProc, "kernel32.dll", "LoadLibraryW");
+	// It may take a while for the Ldr to initialize the thunk, so we just continuously poll and wait.
+	while(GetRemoteFuncAddress(InTargetPID, hProc, "kernel32.dll", "LoadLibraryW") == NULL)
+	{
+		Sleep(100);
+	}
 	
 	// Determine function addresses within remote process
     Info->LoadLibraryW   = (PVOID)GetRemoteFuncAddress(InTargetPID, hProc, "kernel32.dll", "LoadLibraryW");
