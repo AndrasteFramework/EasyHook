@@ -1029,7 +1029,19 @@ Example:
 }
 
 
+// It may take a while for the Ldr to initialize the thunk, so we just continuously poll and wait.
+PVOID RhEnsureThunkIsLoaded(const unsigned long pId, const HANDLE hProcess, char* module, char* func)
+{
+	PVOID address = GetRemoteFuncAddress(pId, hProcess, module, func);
 
+	while (address == NULL)
+	{
+		Sleep(100);
+		address = GetRemoteFuncAddress(pId, hProcess, module, func);
+	}
+
+	return address;
+}
 
 
 EASYHOOK_NT_EXPORT RhInjectLibrary(
@@ -1238,21 +1250,15 @@ Returns:
 
 	// Ensure that if we have injected into a suspended process that we can retrieve the remote function addresses
 	FORCE(NtForceLdrInitializeThunk(hProc));
-
-	// It may take a while for the Ldr to initialize the thunk, so we just continuously poll and wait.
-	while(GetRemoteFuncAddress(InTargetPID, hProc, "kernel32.dll", "LoadLibraryW") == NULL)
-	{
-		Sleep(100);
-	}
 	
 	// Determine function addresses within remote process
-    Info->LoadLibraryW   = (PVOID)GetRemoteFuncAddress(InTargetPID, hProc, "kernel32.dll", "LoadLibraryW");
-	Info->FreeLibrary    = (PVOID)GetRemoteFuncAddress(InTargetPID, hProc, "kernel32.dll", "FreeLibrary");
-	Info->GetProcAddress = (PVOID)GetRemoteFuncAddress(InTargetPID, hProc, "kernel32.dll", "GetProcAddress");
-	Info->VirtualFree    = (PVOID)GetRemoteFuncAddress(InTargetPID, hProc, "kernel32.dll", "VirtualFree");
-	Info->VirtualProtect = (PVOID)GetRemoteFuncAddress(InTargetPID, hProc, "kernel32.dll", "VirtualProtect");
-	Info->ExitThread     = (PVOID)GetRemoteFuncAddress(InTargetPID, hProc, "kernel32.dll", "ExitThread");
-	Info->GetLastError   = (PVOID)GetRemoteFuncAddress(InTargetPID, hProc, "kernel32.dll", "GetLastError");
+    Info->LoadLibraryW   = RhEnsureThunkIsLoaded(InTargetPID, hProc, "kernel32.dll", "LoadLibraryW");
+	Info->FreeLibrary    = RhEnsureThunkIsLoaded(InTargetPID, hProc, "kernel32.dll", "FreeLibrary");
+	Info->GetProcAddress = RhEnsureThunkIsLoaded(InTargetPID, hProc, "kernel32.dll", "GetProcAddress");
+	Info->VirtualFree    = RhEnsureThunkIsLoaded(InTargetPID, hProc, "kernel32.dll", "VirtualFree");
+	Info->VirtualProtect = RhEnsureThunkIsLoaded(InTargetPID, hProc, "kernel32.dll", "VirtualProtect");
+	Info->ExitThread     = RhEnsureThunkIsLoaded(InTargetPID, hProc, "kernel32.dll", "ExitThread");
+	Info->GetLastError   = RhEnsureThunkIsLoaded(InTargetPID, hProc, "kernel32.dll", "GetLastError");
 
     Info->WakeUpThreadID = InWakeUpTID;
     Info->IsManaged = InInjectionOptions & EASYHOOK_INJECT_MANAGED;
