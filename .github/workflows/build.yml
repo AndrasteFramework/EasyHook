@@ -20,7 +20,7 @@ jobs:
     - name: Build x64
       run: msbuild -m EasyHook.sln /p:Configuration=netfx4-Debug /p:Platform=x64 /p:TargetFrameworkVersion=v4.8 /p:TargetFrameworkProfile=""
     - name: Build NuGet Package
-      run: nuget pack EasyHook.sln -PackagesDirectory packages -Prop Configuration=Release
+      run: nuget pack EasyHook.nuspec -PackagesDirectory packages -Prop Configuration=Release
     - name: Upload x86 Artifacts
       uses: actions/upload-artifact@v3
       with:
