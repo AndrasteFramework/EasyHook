@@ -35,4 +35,10 @@ jobs:
         name: x64
         path: |
           Build/netfx4-Debug/x64/*.dll
+
+    - name: Upload x64 Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: NuGet Package
+        path: |
           EasyHook.*.nupkg
