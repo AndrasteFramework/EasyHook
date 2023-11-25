@@ -6,7 +6,7 @@
         <title>EasyHook Andraste Fork</title>
         <authors>EasyHook, Andraste</authors>
         <owners>Andraste</owners>
-        <licenseUrl>https://github.com/AndrasteFramework/EasyHook#license</licenseUrl>
+        <license type="expression">MIT</license>
         <projectUrl>https://easyhook.github.io/</projectUrl>
         <requireLicenseAcceptance>true</requireLicenseAcceptance>
         <description>This project supports extending (hooking) unmanaged code (APIs) with pure managed ones, from within a fully managed environment on 32- or 64-bit Windows XP SP2, Windows Vista x64, Windows Server 2008 x64, Windows 7, Windows 8.1, and Windows 10.
