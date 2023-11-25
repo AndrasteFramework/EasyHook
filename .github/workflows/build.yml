@@ -19,6 +19,8 @@ jobs:
       run: msbuild -m EasyHook.sln /p:Configuration=netfx4-Debug /p:Platform=Win32 /p:TargetFrameworkVersion=v4.8 /p:TargetFrameworkProfile=""
     - name: Build x64
       run: msbuild -m EasyHook.sln /p:Configuration=netfx4-Debug /p:Platform=x64 /p:TargetFrameworkVersion=v4.8 /p:TargetFrameworkProfile=""
+    - name: Build NuGet Package
+      run: nuget pack EasyHook.nuspec -PackagesDirectory packages -Prop Configuration=Release
     - name: Upload x86 Artifacts
       uses: actions/upload-artifact@v3
       with:
@@ -33,3 +35,10 @@ jobs:
         name: x64
         path: |
           Build/netfx4-Debug/x64/*.dll
+
+    - name: Upload x64 Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: NuGet Package
+        path: |
+          Andraste.EasyHook.*.nupkg
