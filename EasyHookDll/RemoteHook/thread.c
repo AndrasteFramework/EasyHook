@@ -706,6 +706,7 @@ FINALLY_OUTRO:
 
 
 
+static int wine_hack = 0;
 
 BOOL EASYHOOK_API GetRemoteModuleExportDirectory(HANDLE hProcess, HMODULE hRemote, PIMAGE_EXPORT_DIRECTORY ExportDirectory, IMAGE_DOS_HEADER DosHeader, IMAGE_NT_HEADERS NtHeaders) {
 /*
@@ -763,10 +764,24 @@ Parameters:
         if(_stricmp((char*)pImageSectionHeader->Name, ".edata") == 0) {
             if(!ReadProcessMemory(hProcess, (void*)pImageSectionHeader->VirtualAddress, ExportDirectory, sizeof(IMAGE_EXPORT_DIRECTORY), NULL))
                 continue;
-            
-			
-			free(ucAllocatedPEHeader);
-            return TRUE;
+
+            // wine hack
+            int j;
+            int all_zero = 1;
+            unsigned char *reader = (unsigned char*)ExportDirectory;
+            for(j = 0;j < sizeof(IMAGE_EXPORT_DIRECTORY);j++){
+                if(reader[j] != 0){
+                    all_zero = 0;
+                    break;
+                }
+            }
+            if(all_zero){
+                wine_hack = 1;
+                break;
+            }else{
+                free(ucAllocatedPEHeader);
+                return TRUE;
+            }
         }
     
     }
@@ -1034,10 +1049,16 @@ PVOID RhEnsureThunkIsLoaded(const unsigned long pId, const HANDLE hProcess, char
 {
 	PVOID address = GetRemoteFuncAddress(pId, hProcess, module, func);
 
+	int cycles = 0;
 	while (address == NULL)
 	{
 		Sleep(100);
 		address = GetRemoteFuncAddress(pId, hProcess, module, func);
+		cycles++;
+		if(cycles == 10 && wine_hack){
+			printf("wine hack: it does not look like the address of function %s can be fetched on wine\n", func);
+			break;
+		}
 	}
 
 	return address;
