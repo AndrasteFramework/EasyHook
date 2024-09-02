@@ -746,40 +746,47 @@ Parameters:
 	if(!ExportDirectory)
         return FALSE;
 
+	memset(ExportDirectory, 0, sizeof(IMAGE_EXPORT_DIRECTORY));
+
+	// Try to read the DataDirectory first
+	if (NtHeaders.OptionalHeader.NumberOfRvaAndSizes >= 1)
+	{
+		dwEATAddress = NtHeaders.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress;
+		if(!dwEATAddress)
+			return FALSE;
+    
+		if(!ReadProcessMemory(hProcess, (void*)((DWORD_PTR)hRemote + dwEATAddress), ExportDirectory, sizeof(IMAGE_EXPORT_DIRECTORY), NULL))
+			return FALSE;
+
+		return TRUE;
+	}
+
+	// Try to find an .edata section
 	ucAllocatedPEHeader = (PUCHAR)malloc(1000 * sizeof(UCHAR));
 
-    memset(ExportDirectory, 0, sizeof(IMAGE_EXPORT_DIRECTORY));
-
-
     if(!ReadProcessMemory(hProcess, (void*)hRemote, ucAllocatedPEHeader, (SIZE_T)1000, NULL))
-        return FALSE;
+    {
+    	free(ucAllocatedPEHeader);
+	    return FALSE;
+    }
     
     pImageSectionHeader = (PIMAGE_SECTION_HEADER)(ucAllocatedPEHeader + DosHeader.e_lfanew + sizeof(IMAGE_NT_HEADERS));
     
     for(i = 0; i < NtHeaders.FileHeader.NumberOfSections; i++, pImageSectionHeader++) {
         if(!pImageSectionHeader)
             continue;
-        
+    	
         if(_stricmp((char*)pImageSectionHeader->Name, ".edata") == 0) {
-            if(!ReadProcessMemory(hProcess, (void*)pImageSectionHeader->VirtualAddress, ExportDirectory, sizeof(IMAGE_EXPORT_DIRECTORY), NULL))
+            if(!ReadProcessMemory(hProcess, (void*)((DWORD_PTR)hRemote + pImageSectionHeader->VirtualAddress), ExportDirectory, sizeof(IMAGE_EXPORT_DIRECTORY), NULL))
                 continue;
-            
 			
 			free(ucAllocatedPEHeader);
             return TRUE;
         }
-    
     }
     
-    dwEATAddress = NtHeaders.OptionalHeader.DataDirectory[0].VirtualAddress;
-    if(!dwEATAddress)
-        return FALSE;
-    
-    if(!ReadProcessMemory(hProcess, (void*)((DWORD_PTR)hRemote + dwEATAddress), ExportDirectory, sizeof(IMAGE_EXPORT_DIRECTORY), NULL))
-        return FALSE;
-    
     free(ucAllocatedPEHeader);
-    return TRUE;
+    return FALSE;
 }
 
 
